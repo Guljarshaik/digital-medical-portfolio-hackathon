@@ -1,3 +1,5 @@
+export type UserRole = 'patient' | 'doctor';
+
 export interface Doctor {
   id: string;
   email: string;
@@ -24,6 +26,28 @@ export interface Patient {
   status: 'active' | 'inactive';
   is_new: boolean;
   created_at: string;
+  // Auth fields for patient login
+  user_id?: string;
+  allergies?: string[];
+  chronic_conditions?: string[];
+  emergency_contact?: EmergencyContact;
+}
+
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phone: string;
+}
+
+export interface VisitHistory {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  visit_date: string;
+  reason: string;
+  diagnosis: string;
+  notes: string;
+  prescription_id?: string;
 }
 
 export interface Appointment {

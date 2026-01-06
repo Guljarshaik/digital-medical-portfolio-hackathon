@@ -612,4 +612,78 @@ export const mockDataUser1 = {
 
 export type MockData = typeof mockData;
 
+// Mock patients with authentication for patient login
+export const mockPatients: Patient[] = [
+  {
+    id: 'patient-111111',
+    user_id: 'patient-user-111111',
+    doctor_id: '00000000-0000-0000-0000-000000000001',
+    full_name: 'John Smith',
+    age: 45,
+    gender: 'Male',
+    phone: '+1-555-0101',
+    email: 'patient1@example.com',
+    address: '123 Main St, New York, NY',
+    blood_group: 'A+',
+    medical_history: 'Hypertension, controlled with medication',
+    status: 'active',
+    is_new: false,
+    created_at: '2025-12-01T10:00:00Z',
+    allergies: ['Penicillin', 'Peanuts'],
+    chronic_conditions: ['Hypertension'],
+    emergency_contact: {
+      name: 'Jane Smith',
+      relationship: 'Spouse',
+      phone: '+1-555-0199',
+    },
+  },
+  {
+    id: 'patient-222222',
+    user_id: 'patient-user-222222',
+    doctor_id: '00000000-0000-0000-0000-000000000001',
+    full_name: 'Sarah Johnson',
+    age: 32,
+    gender: 'Female',
+    phone: '+1-555-0102',
+    email: 'patient2@example.com',
+    address: '456 Oak Ave, Brooklyn, NY',
+    blood_group: 'O+',
+    medical_history: 'No significant medical history',
+    status: 'active',
+    is_new: true,
+    created_at: '2026-01-02T09:00:00Z',
+    allergies: [],
+    chronic_conditions: [],
+    emergency_contact: {
+      name: 'Michael Johnson',
+      relationship: 'Brother',
+      phone: '+1-555-0299',
+    },
+  },
+  {
+    id: 'patient-333333',
+    user_id: 'patient-user-333333',
+    doctor_id: '00000000-0000-0000-0000-000000000001',
+    full_name: 'Michael Brown',
+    age: 58,
+    gender: 'Male',
+    phone: '+1-555-0103',
+    email: 'patient3@example.com',
+    address: '789 Pine Rd, Queens, NY',
+    blood_group: 'B+',
+    medical_history: 'Type 2 Diabetes, managed with diet and medication',
+    status: 'active',
+    is_new: false,
+    created_at: '2025-11-20T14:30:00Z',
+    allergies: ['Sulfa drugs'],
+    chronic_conditions: ['Type 2 Diabetes'],
+    emergency_contact: {
+      name: 'Lisa Brown',
+      relationship: 'Daughter',
+      phone: '+1-555-0399',
+    },
+  },
+];
+
 export default mockData;
+
