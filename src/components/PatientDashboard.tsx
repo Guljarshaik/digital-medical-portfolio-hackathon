@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, FileText, Pill, ClipboardList, Activity, AlertCircle, Clock, LogOut } from 'lucide-react';
+import { User, FileText, Pill, ClipboardList, Activity, AlertCircle, Clock, LogOut, Download, Calendar } from 'lucide-react';
+import { getPatientPrescriptions, getPatientMedications, getPatientReports, getPatientVisitHistory } from '../lib/patientDataHelpers';
+
 
 export type PatientViewType =
     | 'profile'
@@ -230,8 +232,8 @@ export default function PatientDashboard() {
                                 key={item.id}
                                 onClick={() => setCurrentView(item.id)}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                        ? 'bg-blue-50 text-blue-700 font-medium'
-                                        : 'text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-blue-50 text-blue-700 font-medium'
+                                    : 'text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
                                 <Icon className={`w-5 h-5 ${isActive ? 'text-blue-700' : 'text-gray-400'}`} />
