@@ -65,6 +65,9 @@ export default function Dashboard() {
           {renderView()}
         </main>
       </div>
+      <AIChatInterface persona="doctor" />
     </div>
   );
 }
+
+import AIChatInterface from './shared/AIChatInterface';

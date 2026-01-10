@@ -1,17 +1,24 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, UserCircle, Stethoscope, ArrowLeft } from 'lucide-react';
+import { LogIn, UserCircle, Stethoscope, ArrowLeft, UserPlus } from 'lucide-react';
 import { UserRole } from '../types';
 
-export default function Login() {
+interface LoginProps {
+  onBack?: () => void;
+}
+
+export default function Login({ onBack }: LoginProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRole) return;
 
@@ -28,18 +35,66 @@ export default function Login() {
     }
   };
 
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRole) return;
+
+    // Validation
+    if (!fullName.trim()) {
+      setError('Full name is required');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const { error } = await signUp(email, password, fullName, selectedRole);
+      if (error) setError(error.message);
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
+    setIsSignUp(false);
     setError('');
     setEmail('');
     setPassword('');
+    setConfirmPassword('');
+    setFullName('');
   };
 
   const handleBack = () => {
     setSelectedRole(null);
+    setIsSignUp(false);
     setError('');
     setEmail('');
     setPassword('');
+    setConfirmPassword('');
+    setFullName('');
+  };
+
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp);
+    setError('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setFullName('');
   };
 
   // Landing page with role selection
@@ -47,6 +102,17 @@ export default function Login() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
+          {/* Back Button */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="mb-8 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Back to home
+            </button>
+          )}
+          
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-6 shadow-lg">
               <Stethoscope className="w-10 h-10 text-white" />
@@ -108,7 +174,7 @@ export default function Login() {
   // Login form after role selection
   const roleConfig = {
     patient: {
-      title: 'Patient Login',
+      title: isSignUp ? 'Patient Sign Up' : 'Patient Login',
       icon: UserCircle,
       color: 'blue',
       gradientFrom: 'from-blue-500',
@@ -117,14 +183,9 @@ export default function Login() {
       bgColor: 'bg-blue-100',
       textColor: 'text-blue-600',
       buttonBg: 'bg-blue-600 hover:bg-blue-700',
-      demoCredentials: [
-        { email: 'patient1@example.com', password: 'patient123' },
-        { email: 'patient2@example.com', password: 'patient123' },
-        { email: 'patient3@example.com', password: 'patient123' },
-      ],
     },
     doctor: {
-      title: 'Doctor Login',
+      title: isSignUp ? 'Doctor Sign Up' : 'Doctor Login',
       icon: Stethoscope,
       color: 'indigo',
       gradientFrom: 'from-indigo-500',
@@ -133,10 +194,6 @@ export default function Login() {
       bgColor: 'bg-indigo-100',
       textColor: 'text-indigo-600',
       buttonBg: 'bg-indigo-600 hover:bg-indigo-700',
-      demoCredentials: [
-        { email: 'sample.doctor@example.com', password: 'Password123!' },
-        { email: 'user1@gmail.com', password: 'user1234' },
-      ],
     },
   };
 
@@ -160,10 +217,28 @@ export default function Login() {
               <IconComponent className={`w-8 h-8 ${config.textColor}`} />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
-            <p className="text-gray-600 text-sm mt-2">Sign in to your account</p>
+            <p className="text-gray-600 text-sm mt-2">
+              {isSignUp ? 'Create a new account' : 'Sign in to your account'}
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={isSignUp ? handleSignUpSubmit : handleSignIn} className="space-y-5">
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 ${config.focusRing} focus:border-transparent outline-none transition-all`}
+                  placeholder={selectedRole === 'patient' ? 'John Doe' : 'Dr. Jane Smith'}
+                  required={isSignUp}
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
@@ -190,24 +265,30 @@ export default function Login() {
                 placeholder="••••••••"
                 required
               />
+              {isSignUp && (
+                <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+              )}
             </div>
+
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 ${config.focusRing} focus:border-transparent outline-none transition-all`}
+                  placeholder="••••••••"
+                  required={isSignUp}
+                />
+              </div>
+            )}
 
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {error}
-              </div>
-            )}
-
-            {error && error.toLowerCase().includes('invalid') && (
-              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
-                <p className="font-medium mb-2">Demo credentials:</p>
-                <ul className="text-left list-disc list-inside space-y-1">
-                  {config.demoCredentials.map((cred, idx) => (
-                    <li key={idx}>
-                      <strong>{cred.email}</strong> — Password: <strong>{cred.password}</strong>
-                    </li>
-                  ))}
-                </ul>
               </div>
             )}
 
@@ -220,12 +301,33 @@ export default function Login() {
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <LogIn className="w-5 h-5" />
-                  Sign In
+                  {isSignUp ? (
+                    <>
+                      <UserPlus className="w-5 h-5" />
+                      Create Account
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-5 h-5" />
+                      Sign In
+                    </>
+                  )}
                 </>
               )}
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+              <button
+                onClick={toggleMode}
+                className={`ml-2 font-medium ${config.textColor} hover:underline transition-colors`}
+              >
+                {isSignUp ? 'Sign In' : 'Sign Up'}
+              </button>
+            </p>
+          </div>
         </div>
 
         <p className="text-center text-sm text-gray-600 mt-6">

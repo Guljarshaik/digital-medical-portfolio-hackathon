@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, FileText, Pill, ClipboardList, Activity, AlertCircle, Clock, LogOut, Download, Calendar } from 'lucide-react';
-import { getPatientPrescriptions, getPatientMedications, getPatientReports, getPatientVisitHistory } from '../lib/patientDataHelpers';
+import { User, FileText, Pill, ClipboardList, Activity, AlertCircle, Clock, LogOut } from 'lucide-react';
 
 
 export type PatientViewType =
@@ -265,6 +264,9 @@ export default function PatientDashboard() {
                     {renderView()}
                 </div>
             </div>
+            <AIChatInterface persona="patient" context={{ patientName: patient.full_name }} />
         </div>
     );
 }
+
+import AIChatInterface from './shared/AIChatInterface';

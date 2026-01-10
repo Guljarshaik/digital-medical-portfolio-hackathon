@@ -2,6 +2,7 @@ export type UserRole = 'patient' | 'doctor';
 
 export interface Doctor {
   id: string;
+  user_id?: string;
   email: string;
   full_name: string;
   specialization: string;
@@ -14,20 +15,25 @@ export interface Doctor {
 
 export interface Patient {
   id: string;
-  doctor_id: string;
+  user_id?: string;
+  doctor_id?: string;
   full_name: string;
-  age: number;
+  age?: number;
   gender: string;
   phone: string;
   email: string;
   address: string;
-  blood_group: string;
-  medical_history: string;
-  status: 'active' | 'inactive';
-  is_new: boolean;
+  blood_group?: string;
+  blood_type?: string;
+  medical_history?: string;
+  status?: 'active' | 'inactive';
+  is_new?: boolean;
   created_at: string;
-  // Auth fields for patient login
-  user_id?: string;
+  date_of_birth?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  avatar_url?: string;
   allergies?: string[];
   chronic_conditions?: string[];
   emergency_contact?: EmergencyContact;

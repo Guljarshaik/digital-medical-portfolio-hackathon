@@ -1,10 +1,28 @@
+import { createClient } from '@supabase/supabase-js';
 import mockData, { mockDataUser1 } from './mockData';
 import { getCurrentUserId } from './mockState';
 
-// Always use mock data - no Supabase
-const USE_MOCK = true;
+// Initialize Supabase client with environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Build mock client
+// Robust placeholder detection
+const isPlaceholder = (val: string) =>
+  !val ||
+  val === 'your-project-url' ||
+  val === 'your-anon-key' ||
+  val.toLowerCase().includes('placeholder') ||
+  val.startsWith('your-');
+
+const USE_MOCK = isPlaceholder(supabaseUrl) || isPlaceholder(supabaseKey);
+
+if (USE_MOCK) {
+  console.warn(
+    'Warning: Supabase credentials not found or are placeholders. Using mock data mode.'
+  );
+}
+
+// Build mock client for demo/testing
 function buildMockClient() {
   type TableName =
     | 'doctors'
@@ -44,7 +62,6 @@ function buildMockClient() {
 
   function from(table: TableName) {
     let rows = getDatasetForTable(table);
-    // scope rows to current mock user when set so components get per-account data by default
     const currentUser = getCurrentUserId();
     if (currentUser) {
       if (table === 'doctors') {
@@ -56,19 +73,19 @@ function buildMockClient() {
     let selected: any[] | null = null;
 
     const api: any = {
-      select: (sel?: string) => {
+      select: () => {
         selected = clone(rows);
         return api;
       },
       eq: (key: string, value: any) => {
         if (selected == null) selected = clone(rows);
-        selected = filterByEq(selected, key, value);
+        selected = filterByEq(selected!, key, value);
         return api;
       },
       order: (col: string, opts?: any) => {
         if (selected == null) selected = clone(rows);
         const ascending = opts?.ascending !== false;
-        selected.sort((a: any, b: any) => {
+        selected!.sort((a: any, b: any) => {
           const aVal = a[col] || '';
           const bVal = b[col] || '';
           const comparison = String(aVal).localeCompare(String(bVal));
@@ -77,6 +94,10 @@ function buildMockClient() {
         return api;
       },
       maybeSingle: async () => {
+        const current = selected ?? clone(rows);
+        return { data: current[0] ?? null, error: null };
+      },
+      single: async () => {
         const current = selected ?? clone(rows);
         return { data: current[0] ?? null, error: null };
       },
@@ -95,10 +116,10 @@ function buildMockClient() {
           eq: async (key: string, value: any) => {
             const rows = getDatasetForTable(table);
             const currentUser = getCurrentUserId();
-            let filteredRows = currentUser && table !== 'doctors' 
+            let filteredRows = currentUser && table !== 'doctors'
               ? rows.filter((r) => r.doctor_id === currentUser)
               : rows;
-            
+
             let updated = 0;
             filteredRows.forEach((row: any) => {
               if (row[key] === value) {
@@ -132,8 +153,82 @@ function buildMockClient() {
     return 'id-' + Math.random().toString(36).slice(2, 11);
   }
 
-  return { from };
+  // Mock auth for demo mode
+  const mockAuth = {
+    signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+      // Demo credentials
+      const demoDoctors = [
+        { email: 'sample.doctor@example.com', password: 'Password123!' },
+        { email: 'user1@gmail.com', password: 'user1234' },
+      ];
+      const demoPatients = [
+        { email: 'patient1@example.com', password: 'patient123' },
+        { email: 'patient2@example.com', password: 'patient123' },
+        { email: 'patient3@example.com', password: 'patient123' },
+      ];
+
+      const isValidDoctor = demoDoctors.some(d => d.email === email && d.password === password);
+      const isValidPatient = demoPatients.some(p => p.email === email && p.password === password);
+
+      if (isValidDoctor || isValidPatient) {
+        return {
+          data: {
+            user: {
+              id: email,
+              email,
+              user_metadata: { role: isValidDoctor ? 'doctor' : 'patient' },
+            },
+          },
+          error: null,
+        };
+      }
+      return {
+        data: null,
+        error: new Error('Invalid credentials'),
+      };
+    },
+    signUp: async ({ email, password, options }: any) => {
+      return {
+        data: {
+          user: {
+            id: cryptoRandomId(),
+            email,
+            user_metadata: options.data || {},
+          },
+        },
+        error: null,
+      };
+    },
+    signOut: async () => {
+      return { error: null };
+    },
+    getSession: async () => {
+      return { data: { session: null } };
+    },
+    onAuthStateChange: () => {
+      return {
+        data: {
+          subscription: { unsubscribe: () => { } }
+        }
+      };
+    },
+  };
+
+  return { from, auth: mockAuth };
 }
 
-// Always return mock client - no Supabase
-export const supabase: any = buildMockClient();
+// Use mock client or real Supabase
+let supabase: any;
+
+try {
+  if (USE_MOCK) {
+    supabase = buildMockClient();
+  } else {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  supabase = buildMockClient(); // Fallback to mock on crash
+}
+
+export { supabase };
